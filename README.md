@@ -1,1 +1,1 @@
-# hennepin_geodesign
+# Hennepin Geodesign
