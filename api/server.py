@@ -1,3 +1,8 @@
+'''
+TODO 
+2. a)Clean up codebase & Documentation; 
+   b)Email Bryan, 2 other friends to do a code review online and propose changes
+'''
 import string
 import topojson as tp
 import shapefile
@@ -14,6 +19,7 @@ import pandas as pd
 import os
 import urllib3
 import requests
+import numpy as np
 
 from flask import Flask, request
 from flask_cors import CORS
@@ -228,6 +234,150 @@ def convertGeoToTopo(geoJson):
     outputTopoJson = tp.Topology(selectedFeatures, topology = True)
     return str(outputTopoJson)
 
+"""
+input: parcel design json as sent by client
+output: habQual_c, habQual_nc, watQual_c, watQual_nc, parcel_area, mkt_val_to, parcel_ids,
+        groupName, designName, query_wat, query_hab, query_limit, num_selected 
+description: Get attributes required to save in the parcel design table
+"""
+def getParcelDesignData(parcel_design_json):
+
+    parcels = parcel_design_json['features']
+    parcel_ids =[]
+    
+    for parcel in parcels:
+        parcel_id = parcel['properties']['parcel_id']
+        parcel_ids.append(parcel_id)
+
+    # query params used
+    query_wat = parcel_design_json['query_wat']
+    query_hab = parcel_design_json["query_hab"]
+    query_limit = parcel_design_json["query_limit"]
+    num_selected = parcel_design_json["num_selected"]
+    
+    #attributes displayed on map 
+    parcel_area = parcel_design_json["parcel_area"]
+    mkt_val_to = parcel_design_json["mkt_val_to"]
+    habQual_c = parcel_design_json["habQual_c"]
+    habQual_nc = parcel_design_json["habQual_nc"]
+    watQual_c = parcel_design_json["watQual_c"]
+    watQual_nc = parcel_design_json["watQual_nc"]
+    
+    #design attributes
+    designName = parcel_design_json["designname"]
+    groupName = parcel_design_json["groupname"]
+
+    print("habQual_c: "+ str(habQual_c))
+    print("habQual_nc: "+ str(habQual_nc))
+    print("watQual_c: "+ str(watQual_c))
+    print("watQual_nc: "+ str(watQual_nc))
+    print("parcel_area: "+ str(parcel_area))
+    
+    return habQual_c, habQual_nc, watQual_c, watQual_nc, parcel_area, mkt_val_to, parcel_ids, \
+groupName, designName, query_wat, query_hab, query_limit, num_selected      
+"""
+description: saves parcel design to database
+input: parcel design json from client
+output: No response, POST request 
+"""
+@app.route('/save', methods = ['POST'])
+def saveParcelDesign():
+    conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
+    cur = conn.cursor()
+    
+    args = request.args
+    parcel_design_json = request.get_json()
+    #print(parcel_design_json)
+    parcel_design_json_str = json.dumps(parcel_design_json)
+    
+    habQual_c, habQual_nc, watQual_c, watQual_nc, parcel_area, mkt_val_to, parcel_id_list, \
+    groupName, designName, query_watqual, query_habqual, n_records_limit, num_selected = getParcelDesignData(parcel_design_json)
+    print('Extracted values from json')
+    queryStr = "INSERT INTO parcels.parcel_design(user_id, habQual_c, habQual_nc, watQual_c, watQual_nc, parcel_area, \
+    mkt_val_to, parcels_selected, group_name, name, query_watqual, query_habqual, n_records_limit, num_selected,\
+    design_json) VALUES("\
+                +"1" +","+ str(habQual_c) +","+ str(habQual_nc) +","+ str(watQual_c) +","+ str(watQual_nc) +","+\
+                str(parcel_area) +","+ str(mkt_val_to)+"," \
+                 + "ARRAY"+str(parcel_id_list)+  ",'"+ groupName+"','"+ designName +"',"+ str(query_watqual) +","+\
+                str(query_habqual) +","+ str(n_records_limit) +","+ str(num_selected) +",'"+ parcel_design_json_str +  "')" 
+    cur.execute(queryStr)
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("Completed saving design")
+    return "INSERT Complete"
+
+"""
+description: loads parcel design given designName, groupName or both attributes
+input: request params:  'designName', 'groupName' 
+output: json file with parcel design
+"""
+@app.route('/load')
+def retrieveParcelDesign():
+    conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
+    cur = conn.cursor()
+    
+    args = request.args
+    print("query args:"+ str(args))
+    reqd_cols = "id, name, version, created_user, created_time,"+\
+    "group_name, parcels_selected, user_id, parcel_area, mkt_val_to, watqual_c, watqual_nc,"+\
+                        "habqual_nc, habqual_c, query_watqual, query_habqual, n_records_limit, num_selected, design_json" 
+   
+    if 'designName' in args and 'groupName' in args:
+        designId = args['designName']
+        groupName = args['groupName']
+        queryStr = "SELECT "+ reqd_cols+ " from parcels.parcel_design WHERE name = '"+ str(designId)+"' and group_name='"+groupName+"'"
+
+    elif 'groupName' in args:
+        groupName = args['groupName']
+        queryStr = "SELECT "+reqd_cols+" from parcels.parcel_design WHERE group_name = '"+ groupName +"'"
+    elif 'designName' in args:
+        designId = args['designName']
+        queryStr = "SELECT "+reqd_cols+" from parcels.parcel_design WHERE name ='"+ str(designId)+"'"
+    print("Executing query:"+ queryStr)
+    #queryStr = "SELECT "+ reqd_cols +" from parcels.parcel_design WHERE name = '"+ str(designId)+"'"
+    cur.execute(queryStr)
+    query_results = cur.fetchall()
+    query_results_df = pd.DataFrame(data = query_results, columns = ['id', 'name', 'version', 'created_user', 'created_time',\
+                        'group_name', 'parcels_selected', 'user_id', 'parcel_area', 'mkt_val_to', 'watqual_c', 'watqual_nc',\
+                        'habqual_nc', 'habqual_c', 'query_watqual', 'query_habqual', 'n_records_limit', 'num_selected', 'design_json'])
+    
+    query_results_json = query_results_df.to_json(orient="records")
+    print("Extracted query results as: "+ query_results_json)
+    cur.close()
+    conn.close()
+    return query_results_json
+
+"""
+description: retrieves summary of parcel designs created by a user given a 'userId' 
+input: userId
+output: json with parcel design summary
+"""
+@app.route('/loadSummary')
+def retrieveParcelDesignSummary(): #user/group ID
+    conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
+    cur = conn.cursor()
+    
+    args = request.args
+    print("query args:"+ str(args))
+    userId = args['userId']
+    required_cols = "id, name, version, created_user, created_time," +\
+                    "group_name, parcels_selected, user_id, parcel_area, watqual_c, watqual_nc," + \
+                        "habqual_nc, habqual_c"
+    queryStr = "SELECT "+ required_cols+" from parcels.parcel_design WHERE user_id = "+ str(userId)
+    print("Execting query string:"+ queryStr)
+    cur.execute(queryStr)
+    query_results = cur.fetchall()
+    query_results_df = pd.DataFrame(data = query_results, columns = ['id', 'name', 'version', 'created_user', 'created_time',\
+                        'group_name', 'parcels_selected', 'user_id', 'parcel_area', 'watqual_c', 'watqual_nc',\
+                        'habqual_nc', 'habqual_c'])
+
+    query_results_json = query_results_df.to_json(orient="records")
+    #print("Extracted query results as: "+ query_results_json)
+    cur.close()
+    conn.close()
+    return query_results_json
+
 #reads shape file and returns topojson
 @app.route('/testParcels')
 def getTestParcels():
@@ -304,9 +454,9 @@ if __name__ == "__main__":
      # debug=True, #shows errors 
       host='0.0.0.0', #tells app to run exposed to outside world
       #host = 'ops.parcels.com',
-      #port = 80,
-      port=443, #port for https
-      ssl_context = ('/home/shared/hennepin_geodesign/api/server.crt','/home/shared/hennepin_geodesign/api/server.key')
+      port = 80,
+      #port=443, #port for https
+      #ssl_context = ('/home/shared/hennepin_geodesign/api/server.crt','/home/shared/hennepin_geodesign/api/server.key')
       #ssl_context = context
       )
 
