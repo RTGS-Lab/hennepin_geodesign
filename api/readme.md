@@ -4,7 +4,7 @@ The server supports client requests to select parcels, save and retrieve parcel 
 
 ## List of APIs exposed
 ### 1. Select Parcels
-API to choose required parcels from database based on water quality index, habitatt quality index, parcel type etc
+API to choose required parcels from database based on water quality index, habitat quality index, parcel type etc
     
     http://localhost:80/parcels?n=10&watqual_c=68&watqual_nc=52&habQual_c=41&habQual_nc=53&pr_typ_nm1=RESIDENTIAL
     
