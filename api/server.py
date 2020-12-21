@@ -1,7 +1,12 @@
 '''
 TODO 
+1. Implement the 3 API endpoints(load, save, designSummary)
 2. a)Clean up codebase & Documentation; 
    b)Email Bryan, 2 other friends to do a code review online and propose changes
+3. Follow up on the json with Steve/Zach if no email by Dec 3
+4. Check in/Meet? with Steve/Zach to add save, load buttons. Edit?
+5. 
+
 '''
 import string
 import topojson as tp
@@ -25,9 +30,6 @@ from flask import Flask, request
 from flask_cors import CORS
 app = Flask(__name__) # setup initial flask app; gets called throughout in routes
 CORS(app)
-#requests.packages.urllib3.disable_warnings()
-#requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':HIGH:!DH:!aNULL'
-#requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = 'ALL:@SECLEVEL=1'
 '''
 Python decorateors point to a function
 Here, it specifies the app route '/'.
@@ -49,14 +51,11 @@ def hello_world(): #function that app.route decorator references
 def hello():
   return "demonstration"
 
-#@app.route('/parcels')
-#def getParcels():
-
- #  with open('/home/shared/data/hennepin_county_parcels_topo.json') as file:
-  #     print('starting to read file')
-   #    hp_county_topo = json.load(file)
-   #print('Read topo json file') 
-   #return str(hp_county_topo)
+'''
+description: appends appropriate operator: = for str and > for int fields in DB query
+input: attr - field name, args - request params as sent by client, query_filter, dataType
+output: query_filter updated with current attribute condition
+'''
 def getFieldCheck(attr, args, query_filter, dataType):
     if attr in args:
         attr_val = args[attr]
@@ -74,7 +73,11 @@ def getFieldCheck(attr, args, query_filter, dataType):
             query_filter = (query_filter+ ' AND '+ attr+ op + attr_val)
 
     return query_filter
-
+'''
+description: wrapper method to build query filter condition specific to each field
+input:args - request params as sent by client
+output: query filter
+'''
 def buildQueryFilter(args):
     query_filter = ''
    
@@ -110,7 +113,11 @@ COMPARISON_OPERATORS = {
     "eq": "=",
     "neq": "!="
 }
-
+'''
+description: Generates DB query using the JSON object
+input: JSON object (dict)
+output: string DB query
+'''
 def process(data):
     """
     :param data: JSON Object (dict). 
@@ -142,7 +149,11 @@ def process(data):
         return ""
     else:
         return where_clause
-
+'''
+description: API to query parcels
+input: query params in the URL
+output: geojson object of parcels retrieved
+'''
 @app.route('/parcels')
 def getQueryParcels():
     conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
@@ -169,18 +180,11 @@ def getQueryParcels():
     op_geo_json = data2geojson(query_results_geo_df)
     return op_geo_json
 
-@app.route('/nParcelsDB/<int:n>')
-def getNDBParcels(n):
-    conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
-    cur = conn.cursor()
-    result = cur.execute("select parcel_id, parcel_area, sale_price, geom, ST_AsText(geom) AS poly_points,  watqual_c, watqual_nc, habqual_nc, habqual_c from parcels.parcels LIMIT "+ str(n))
-    query_results = cur.fetchall()
-    query_results_df = pd.DataFrame(data = query_results, columns = ['parcel_id', 'parcel_area', 'sale_price', 'geom', 'poly_pts','watQual_c', 'watQual_nc', 'habQual_nc', 'habQual_c'])
-    query_results_df['poly_pts'] = query_results_df['poly_pts'].apply(wkt.loads)
-    query_results_geo_df = gpd.GeoDataFrame(query_results_df, geometry='poly_pts')
-    op_geo_json_db = data2geojson(query_results_geo_df)
-    return op_geo_json_db
-
+'''
+description: convert geodataframe to geojson
+input: geodataframe 
+output: geojson
+'''
 def data2geojson(df):
     features = []
     filter_features = lambda X: features.append( geojson.Feature(geometry= X["poly_pts"],\
@@ -196,50 +200,11 @@ def data2geojson(df):
     #return json.dumps(op_topo_json) 
     #return json.dumps(op_json)
     return op_json
-
-#method to retrieve parcels from json file. takes time since file needs to be loaded for each request  
-#@app.route('/nParcels/<int:n>')
-#def getTopNParcels(n):
-#    with open('/home/shared/data/hennepin_co_parcels_web_geo.json') as file:
-#        print('starting to read json file')
-#        hp_county_json = json.load(file)
-#    # make this based on selection
-#    selectedFeatures = []
-#    n_features =0
-#    for feat in hp_county_json['features']:
-#        if n_features< n :
-#            selectedFeatures.append(feat)
-#            n_features = n_features+1
-#    outputGeoJson = {'type': 'FeatureCollection', 'features': selectedFeatures}
-#    print('constructed json with selected parcels')
-#    jsonStr = json.dumps(outputGeoJson)
-#    return jsonStr
-#    #TODO Convert Geo to Topo while returning
-
-#TODO Complete thismethod
-@app.route('/nParcels')
-def convertGeoToTopo(geoJson):
-    with open('/home/shared/data/hennepin_county_parcels_geo_feat.json') as file:
-        print('starting to read json file')
-        hp_county_json = json.load(file)
-    # make this based on selection
-    selectedFeatures = []
-    n_features =0
-    for feat in hp_county_json['features']:
-        if n_features< n :
-            selectedFeatures.append(feat)
-            n_features = n_features+1
-    outputGeoJson = {'type': 'FeatureCollection', 'features': selectedFeatures}
-    print('constructed json with selected parcels')
-    outputTopoJson = tp.Topology(selectedFeatures, topology = True)
-    return str(outputTopoJson)
-
-"""
+'''
+description: exatract attributes required to save parcel design from geojson
 input: parcel design json as sent by client
-output: habQual_c, habQual_nc, watQual_c, watQual_nc, parcel_area, mkt_val_to, parcel_ids,
-        groupName, designName, query_wat, query_hab, query_limit, num_selected 
-description: Get attributes required to save in the parcel design table
-"""
+output: attributes in parcel_design table: habQual_c, habQual_nc, watQual_c, watQual_nc, parcel_area, mkt_val_to, parcel_ids, groupName, designName, query_wat, query_hab, query_limit, num_selected 
+'''
 def getParcelDesignData(parcel_design_json):
 
     parcels = parcel_design_json['features']
@@ -275,11 +240,12 @@ def getParcelDesignData(parcel_design_json):
     
     return habQual_c, habQual_nc, watQual_c, watQual_nc, parcel_area, mkt_val_to, parcel_ids, \
 groupName, designName, query_wat, query_hab, query_limit, num_selected      
-"""
-description: saves parcel design to database
+
+'''
+description: API to save parcel design to database
 input: parcel design json from client
 output: No response, POST request 
-"""
+'''
 @app.route('/save', methods = ['POST'])
 def saveParcelDesign():
     conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
@@ -308,7 +274,7 @@ def saveParcelDesign():
     return "INSERT Complete"
 
 """
-description: loads parcel design given designName, groupName or both attributes
+description: API to retrieve  parcel design from DB given designName, groupName or both attributes
 input: request params:  'designName', 'groupName' 
 output: json file with parcel design
 """
@@ -335,7 +301,6 @@ def retrieveParcelDesign():
         designId = args['designName']
         queryStr = "SELECT "+reqd_cols+" from parcels.parcel_design WHERE name ='"+ str(designId)+"'"
     print("Executing query:"+ queryStr)
-    #queryStr = "SELECT "+ reqd_cols +" from parcels.parcel_design WHERE name = '"+ str(designId)+"'"
     cur.execute(queryStr)
     query_results = cur.fetchall()
     query_results_df = pd.DataFrame(data = query_results, columns = ['id', 'name', 'version', 'created_user', 'created_time',\
@@ -343,16 +308,15 @@ def retrieveParcelDesign():
                         'habqual_nc', 'habqual_c', 'query_watqual', 'query_habqual', 'n_records_limit', 'num_selected', 'design_json'])
     
     query_results_json = query_results_df.to_json(orient="records")
-    print("Extracted query results as: "+ query_results_json)
+    print("Extracted load query results")
     cur.close()
     conn.close()
     return query_results_json
-
-"""
-description: retrieves summary of parcel designs created by a user given a 'userId' 
+'''
+description: API to retrieve summary of parcel designs created by a user given a 'userId' 
 input: userId
 output: json with parcel design summary
-"""
+'''
 @app.route('/loadSummary')
 def retrieveParcelDesignSummary(): #user/group ID
     conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
@@ -373,56 +337,11 @@ def retrieveParcelDesignSummary(): #user/group ID
                         'habqual_nc', 'habqual_c'])
 
     query_results_json = query_results_df.to_json(orient="records")
-    #print("Extracted query results as: "+ query_results_json)
+    print('Extracted query results of load summary')
     cur.close()
     conn.close()
     return query_results_json
 
-#reads shape file and returns topojson
-@app.route('/testParcels')
-def getTestParcels():
-
-   #TODO Remove hardcoded shape file
-
-   input_shape_file ="/home/shared/data/test/map.shp"
-   zipShape = zipfile.ZipFile(open(r'/home/shared/data/parcels.zip', 'rb'))
-   print('read to zipshape')
-   print(zipShape.namelist())
-   dbfName,_, shpName,shxName = sorted(zipShape.namelist())
-   print("dbfNAme:"+ dbfName+ " shpName:"+ shpName)
-   reader = shapefile.Reader(shp = zipShape.open(shpName), dbf = zipShape.open(dbfName))
-   # read the shapefile
-   #reader = shapefile.Reader(zipshape)
-   print('read to reader')
-   fields = reader.fields[1:]
-   
-   field_names = [field[0] for field in fields]
-   print(len(field_names))
-   buffer = []
-   i =1
-   
-   print(len(reader))
-   batchSize = 30000
-
-   for sr in reader.iterShapeRecords():
-        
-        if i % batchSize ==0:
-            topojson_temp = tp.Topology(buffer, topology=True)
-            topojson = tp.merge(topojson, topojson_temp)
-            buffer =[]
-
-        atr = dict(zip(field_names, sr.record))
-        geom = sr.shape.__geo_interface__
-        buffer.append(dict(type="Feature", geometry=geom, properties=atr))
-        if i%10000 ==0:
-            print(i)
-        i = i+1
-    
-   #topojson= tp.Topology(buffer, topology = True)
-   topojson = tp.merge(topojson, topojson_temp)
-   image = topojson.to_alt()
-    #return str(topojson)
-   return 'extracted json for all hennepin county parcels'
 '''
 MAKE YOUR OWN ROUTE:
 
@@ -457,6 +376,5 @@ if __name__ == "__main__":
       port = 80,
       #port=443, #port for https
       #ssl_context = ('/home/shared/hennepin_geodesign/api/server.crt','/home/shared/hennepin_geodesign/api/server.key')
-      #ssl_context = context
       )
 
