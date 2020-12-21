@@ -1,6 +1,6 @@
 # Hennepin County Geo Design - Server side API
 
-The server side APIs support client requests to select parcels, save and retrieve parcel designs from database. In order to bring up the server, run *server.py* file which brings up Flask server with below APIs.
+The server supports client requests to select parcels, save and retrieve parcel designs from database. In order to start the server, run *server.py* file which brings up a Flask server with below APIs.
 
 ## List of APIs exposed
 ### 1. Select Parcels
