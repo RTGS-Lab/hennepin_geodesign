@@ -191,7 +191,7 @@ def data2geojson(df):
     #return json.dumps(op_json)
     return op_json
 '''
-description: exatract attributes required to save parcel design from geojson
+description: extract attributes required to save parcel design from geojson
 input: parcel design json as sent by client
 output: attributes in parcel_design table: habQual_c, habQual_nc, watQual_c, watQual_nc, parcel_area, mkt_val_to, parcel_ids, groupName, designName, query_wat, query_hab, query_limit, num_selected 
 '''
