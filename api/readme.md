@@ -1,9 +1,9 @@
-## Hennepin County Geo Design - Server side API
+# Hennepin County Geo Design - Server side API
 
 The server side API supports client requests to select parcels, save and retrieve parcel designs from database
 
-### List of APIs exposed
-1. Select parcels
+## List of APIs exposed
+1. ### Select parcels
     API to choose required parcels from database based on water quality index, habitatt quality index, parcel type etc
     
     URL: http://localhost:80/parcels?n=10&watqual_c=68&watqual_nc=52&habQual_c=41&habQual_nc=53&pr_typ_nm1=RESIDENTIAL
