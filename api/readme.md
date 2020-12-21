@@ -33,6 +33,6 @@ API to load summary of parcel design for a user id. It is light weight when comp
 
 ## Database tables
 * Parcels
-    **parcel id
+    ** parcel id
 * Parcel_design
 * user_group
