@@ -25,7 +25,7 @@ API to load parcel design from the database given design name, group name or bot
     http://localhost:80/load?designName=design_123&groupName=group_344
     
 ### 4. Retrieve Parcel design summary
-API to load summary of parcel design for a user id. It is light weight when compared to 'load' API
+API to load summary of parcel design for a user id. It is light weight when compared to *'load'* API
     
     http://localhost:80/loadSummary?userId=1
     
