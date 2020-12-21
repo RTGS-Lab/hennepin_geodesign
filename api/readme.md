@@ -1,6 +1,6 @@
 # Hennepin County Geo Design - Server side API
 
-The server side API supports client requests to select parcels, save and retrieve parcel designs from database
+The server side APIs support client requests to select parcels, save and retrieve parcel designs from database
 
 ## List of APIs exposed
 ### 1. Select Parcels
