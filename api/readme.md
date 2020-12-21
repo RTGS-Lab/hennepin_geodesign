@@ -26,5 +26,6 @@ The server side API supports client requests to select parcels, save and retriev
     
 4. Retrieve parcel design summary
     API to load summary of parcel design. It is lght weight when compared to 'load' API
+    
     URL: http://localhost:80/loadSummary?userId=1
     
