@@ -29,3 +29,4 @@ API to load summary of parcel design for a user id. It is light weight when comp
     
     http://localhost:80/loadSummary?userId=1
     
+*Actual ip address of the server not published for privacy reasons*
