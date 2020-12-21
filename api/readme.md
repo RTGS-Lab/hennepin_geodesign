@@ -34,3 +34,4 @@ API to load summary of parcel design for a user id. It is light weight when comp
 ## Database tables
 * Parcels
 * Parcel_design
+* user_group
