@@ -6,3 +6,6 @@ Project to do Hennepin County parcel design based on water quality, habitat qual
 * Server side - Python
 * Client side - Open layers, Javascript
 * Database - PostgreSQL
+
+
+Client side code is available here: https://github.umn.edu/ztvavra/hennepin-geodesign
