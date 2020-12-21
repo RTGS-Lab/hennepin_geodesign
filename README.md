@@ -1,10 +1,8 @@
 # Hennepin Geodesign
 
+Project to do Hennepin County parcel design based on water quality, habitat quality indices, parcel type, parcel sale price and other attributes. 
 
-Organization
-
-\front-end
-
-\front-end server
-
-\API
+## Tech Stack
+* Server side - Python
+* Client side - Open layers, Javascript
+* Database - PostgreSQL
