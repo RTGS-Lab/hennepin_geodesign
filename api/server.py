@@ -1,13 +1,3 @@
-'''
-TODO 
-1. Implement the 3 API endpoints(load, save, designSummary)
-2. a)Clean up codebase & Documentation; 
-   b)Email Bryan, 2 other friends to do a code review online and propose changes
-3. Follow up on the json with Steve/Zach if no email by Dec 3
-4. Check in/Meet? with Steve/Zach to add save, load buttons. Edit?
-5. 
-
-'''
 import string
 import topojson as tp
 import shapefile
