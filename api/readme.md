@@ -2,7 +2,7 @@
 
 The server supports client requests to select parcels, save and retrieve parcel designs from database. In order to start the server, run *server.py* file which brings up a Flask server with below APIs.
 
-## List of APIs exposed
+## List of available APIs
 ### 1. Select Parcels
 API to choose required parcels from database based on water quality index, habitat quality index, parcel type etc
     
