@@ -18,7 +18,7 @@ The server side API supports client requests to select parcels, save and retriev
 3. Retrieve parcel design
     API to load parcel design from the database given design name, group name or both 
     
-    URL: http://localhost:80/load?designName=design1
+    URLs: http://localhost:80/load?designName=design1
     
     http://localhost:80/load?groupName=group_344
     
