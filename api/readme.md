@@ -3,19 +3,28 @@
 The server side API supports client requests to select parcels, save and retrieve parcel designs from database
 
 ### List of APIs exposed
-* Select parcels
+1. Select parcels
     API to choose required parcels from database based on water quality index, habitatt quality index, parcel type etc
+    
     URL: http://localhost:80/parcels?n=10&watqual_c=68&watqual_nc=52&habQual_c=41&habQual_nc=53&pr_typ_nm1=RESIDENTIAL
- * Save Parcel design
+    
+ 2. Save Parcel design
     API to save parcel design communicated by client 
+    
     It saves to parcel_design table in the database
+    
     URL: http://localhost:80/save with design json in the request arguments
-* Retrieve parcel design
+    
+3. Retrieve parcel design
     API to load parcel design from the database given design name, group name or both 
+    
     URL: http://localhost:80/load?designName=design1
+    
     http://localhost:80/load?groupName=group_344
+    
     http://localhost:80/load?designName=design_123&groupName=group_344
-* Retrieve parcel design summary
+    
+4. Retrieve parcel design summary
     API to load summary of parcel design. It is lght weight when compared to 'load' API
     URL: http://localhost:80/loadSummary?userId=1
     
