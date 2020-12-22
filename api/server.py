@@ -34,6 +34,13 @@ in the @app.route('/') designation.
 For more on decorators, Google "decorators in python".
 '''
 @app.route('/') #python decorator 
+
+ipAddress = 35.222.135.127
+db_port = 5432
+db_name = "hennepin_geodesign"
+user_name = "postgres"
+password = "******"
+
 def hello_world(): #function that app.route decorator references
   response = hello()
   return response
@@ -144,9 +151,10 @@ description: API to query parcels
 input: query params in the URL
 output: geojson object of parcels retrieved
 '''
+
 @app.route('/parcels')
 def getQueryParcels():
-    conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
+    conn = psycopg2.connect(host = ipAddress, port = db_port, database = db_name, user = user_name, password = password)
     cur = conn.cursor()
     args = request.args
     print('query args:'+ str(args))
@@ -238,7 +246,7 @@ output: No response, POST request
 '''
 @app.route('/save', methods = ['POST'])
 def saveParcelDesign():
-    conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
+    conn = psycopg2.connect(host = ipAddress, port = db_port, database = db_name, user = user_name, password = password)
     cur = conn.cursor()
     
     args = request.args
@@ -270,7 +278,7 @@ output: json file with parcel design
 """
 @app.route('/load')
 def retrieveParcelDesign():
-    conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
+    conn = psycopg2.connect(host = ipAddress, port = db_port, database = db_name, user = user_name, password = password)
     cur = conn.cursor()
     
     args = request.args
@@ -309,7 +317,7 @@ output: json with parcel design summary
 '''
 @app.route('/loadSummary')
 def retrieveParcelDesignSummary(): #user/group ID
-    conn = psycopg2.connect(host="35.222.135.127", port = 5432, database="hennepin_geodesign", user="postgres", password="GemsIOT1701")
+    conn = psycopg2.connect(host = ipAddress, port = db_port, database = db_name, user = user_name, password = password)
     cur = conn.cursor()
     
     args = request.args
